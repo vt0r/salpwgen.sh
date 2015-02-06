@@ -1,12 +1,11 @@
 #!/bin/bash
-#-----------
-# salpwgen.sh
-#
-# It's a password generator for Bash.
-# This was originally a function to
-# include in your .bashrc or wherever,
-# but I think it makes more sense as a
-# script when publishing it to Github.
+# --------------------------------
+# Sal's Random Password Generator
+# --------------------------------
+# It does what it says.
+# --------------------------------
+# Copyright (c) 2015, Salvatore LaMendola <salvatore@lamendola.me>
+# All rights reserved.
 
 case "$1" in
   -s|--symbols)
@@ -40,56 +39,63 @@ case "$1" in
   ;;
 esac
 
-if [ -z "$2" ]
-then
+# If length argument was specified, override the default
+if [ -z "$2" ]; then
      export LEN="19"
 else
      export LEN="$2"
 fi
 
-if [ -z "$3" ]
-then
+# If number argument was specified, override the default
+if [ -z "$3" ]; then
      export NUM="1"
 else
      export NUM="$3"
 fi
 
-if [ "$PHPMA" == "1" ]
-then
-     tr -dc 'a-zA-Z0-9-_!@#$%^&*/\()_+{}|:<>?=' < /dev/random | fold -w 46 | head -n 1
-     exit 0
-elif [ "$WORDPRESS" == "1" ]
-then
-     WP1=$(tr -dc 'a-zA-Z0-9-_!@#$%^&*/\()_+{}|:<>?=' < /dev/random | fold -w 64 | head -n 1)
-     WP2=$(tr -dc 'a-zA-Z0-9-_!@#$%^&*/\()_+{}|:<>?=' < /dev/random | fold -w 64 | head -n 1)
-     WP3=$(tr -dc 'a-zA-Z0-9-_!@#$%^&*/\()_+{}|:<>?=' < /dev/random | fold -w 64 | head -n 1)
-     WP4=$(tr -dc 'a-zA-Z0-9-_!@#$%^&*/\()_+{}|:<>?=' < /dev/random | fold -w 64 | head -n 1)
-     WP5=$(tr -dc 'a-zA-Z0-9-_!@#$%^&*/\()_+{}|:<>?=' < /dev/random | fold -w 64 | head -n 1)
-     WP6=$(tr -dc 'a-zA-Z0-9-_!@#$%^&*/\()_+{}|:<>?=' < /dev/random | fold -w 64 | head -n 1)
-     WP7=$(tr -dc 'a-zA-Z0-9-_!@#$%^&*/\()_+{}|:<>?=' < /dev/random | fold -w 64 | head -n 1)
-     WP8=$(tr -dc 'a-zA-Z0-9-_!@#$%^&*/\()_+{}|:<>?=' < /dev/random | fold -w 64 | head -n 1)
-     echo "define('AUTH_KEY',         '$WP1');"
-     echo "define('SECURE_AUTH_KEY',  '$WP2');"
-     echo "define('LOGGED_IN_KEY',    '$WP3');"
-     echo "define('NONCE_KEY',        '$WP4');"
-     echo "define('AUTH_SALT',        '$WP5');"
-     echo "define('SECURE_AUTH_SALT', '$WP6');"
-     echo "define('LOGGED_IN_SALT',   '$WP7');"
-     echo "define('NONCE_SALT',       '$WP8');"
-     exit 0
-elif [ "$YUBIKEY" == "1" ]
-then
-     # Comment the following three lines and uncomment the "OTP AES Key" line
-     # to modify this for static key generation (OTP Mode).
-     echo "Public Identity: vv$(tr -dc 'a-f0-9' < /dev/random | fold -w 10 | head -n 1 | tr "[0123456789abcdef]" "[cbdefghijklnrtuv]")"
-     echo "Private Identity: $(tr -dc 'a-f0-9' < /dev/random | fold -w 12 | head -n 1)"
-     echo "Secret Key: $(tr -dc 'a-f0-9' < /dev/random | fold -w 32 | head -n 1)"
-     #echo "OTP AES Key: $(tr -dc 'a-f0-9' < /dev/random | fold -w 40 | head -n 1)"
-elif [ "$SYMBOLS" == "1" ]
-then
-     tr -dc 'a-zA-Z0-9-_!@#$%^&*/\()_+{}|:<>?=' < /dev/random | fold -w "$LEN" | head -n "$NUM"
+# Function to do most of the dirty work
+pwgenerator () {
+    case "$2" in
+        symbols)
+            gtr -dc 'a-zA-Z0-9-_!@#$%^&*/\()_+{}|:<>?=' < /dev/urandom | fold -w $1 | head -n $3
+        ;;
+        alphanumeric)
+            gtr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w $1 | head -n $3
+        ;;
+        hex)
+            gtr -dc 'a-f0-9' < /dev/urandom | fold -w $1 | head -n $3
+        ;;
+        *)
+            echo "ERROR: Empty/incorrect password type was specified."
+            exit 1
+        ;;
+    esac
+}
+
+if [ "$PHPMA" == "1" ]; then
+    pwgenerator 64 symbols 1
+    exit 0
+elif [ "$WORDPRESS" == "1" ]; then
+    echo "define('AUTH_KEY',         '$(pwgenerator 64 symbols 1)');"
+    echo "define('SECURE_AUTH_KEY',  '$(pwgenerator 64 symbols 1)');"
+    echo "define('LOGGED_IN_KEY',    '$(pwgenerator 64 symbols 1)');"
+    echo "define('NONCE_KEY',        '$(pwgenerator 64 symbols 1)');"
+    echo "define('AUTH_SALT',        '$(pwgenerator 64 symbols 1)');"
+    echo "define('SECURE_AUTH_SALT', '$(pwgenerator 64 symbols 1)');"
+    echo "define('LOGGED_IN_SALT',   '$(pwgenerator 64 symbols 1)');"
+    echo "define('NONCE_SALT',       '$(pwgenerator 64 symbols 1)');"
+    exit 0
+elif [ "$YUBIKEY" == "1" ]; then
+    # Comment the following three lines and uncomment the "OTP AES Key" line
+    # to modify this for static key generation (OTP Mode).
+    echo "Public Identity: vv$(pwgenerator 10 hex 1 | tr "[0123456789abcdef]" "[cbdefghijklnrtuv]")"
+    echo "Private Identity: $(pwgenerator 12 hex 1)"
+    echo "Secret Key: $(pwgenerator 32 hex 1)"
+    #echo "OTP AES Key: $(pwgenerator 40 hex 1)"
+elif [ "$SYMBOLS" == "1" ]; then
+    pwgenerator $LEN symbols $NUM
 else
-     tr -dc 'a-zA-Z0-9' < /dev/random | fold -w "$LEN" | head -n "$NUM"
+    pwgenerator $LEN alphanumeric $NUM
 fi
 
 exit 0
