@@ -57,13 +57,13 @@ fi
 pwgenerator () {
     case "$2" in
         symbols)
-            gtr -dc 'a-zA-Z0-9-_!@#$%^&*/\()_+{}|:<>?=' < /dev/urandom | fold -w $1 | head -n $3
+            tr -dc 'a-zA-Z0-9-_!@#$%^&*/\()_+{}|:<>?=' < /dev/urandom | fold -w $1 | head -n $3
         ;;
         alphanumeric)
-            gtr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w $1 | head -n $3
+            tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w $1 | head -n $3
         ;;
         hex)
-            gtr -dc 'a-f0-9' < /dev/urandom | fold -w $1 | head -n $3
+            tr -dc 'a-f0-9' < /dev/urandom | fold -w $1 | head -n $3
         ;;
         *)
             echo "ERROR: Empty/incorrect password type was specified."
